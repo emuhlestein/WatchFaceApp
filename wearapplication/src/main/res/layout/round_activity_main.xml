@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/purple"
+    tools:context="com.intelliviz.wearapplication.MainActivity"
+    tools:deviceIds="wear_square">
+
+    <TextView
+        android:id="@+id/timeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:paddingTop="10dp"
+        android:text="12:12"
+        android:textSize="@dimen/time_size" />
+
+    <TextView
+        android:id="@+id/dateText"
+        android:text="TextView"
+        android:fontFamily="sans-serif-thin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/timeText"
+        android:layout_centerHorizontal="true"
+        android:textSize="@dimen/date_size" />
+    <TextView
+        android:id="@+id/lineText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/dateText"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/line"/>
+    <TextView
+        android:id="@+id/maxTempText"
+        android:text="50&#xb0;"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/lineText"
+        android:layout_centerHorizontal="true"
+        android:textSize="@dimen/temp_size" />
+    <ImageView
+        android:id="@+id/conditionImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/lineText"
+        android:layout_toLeftOf="@+id/maxTempText"
+        android:paddingRight="20dp"
+        />
+    <TextView
+        android:id="@+id/minTempText"
+        android:text="25&#xb0;"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/lineText"
+        android:layout_toRightOf="@+id/maxTempText"
+        android:layout_centerHorizontal="true"
+        android:paddingLeft="10dp"
+        android:textSize="@dimen/temp_size"
+        android:fontFamily="sans-serif-thin"
+        android:textColor="@color/light_grey" />
+</RelativeLayout>
