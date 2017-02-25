@@ -18,14 +18,12 @@ import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
 import java.util.TimeZone;
 
 public class WatchFaceAppService extends CanvasWatchFaceService {
@@ -49,6 +47,7 @@ public class WatchFaceAppService extends CanvasWatchFaceService {
 
     private class Engine extends CanvasWatchFaceService.Engine {
         private final String TAG = Engine.class.getSimpleName();
+        private static final long COLON_UPDATE_RATE_MS = 500;
         private final int TIMEOUT_MS = 1000;
         static final int MSG_UPDATE_TIME = 0;
         private Calendar mCalendar;
@@ -74,6 +73,10 @@ public class WatchFaceAppService extends CanvasWatchFaceService {
         private float mColonWidth;
         private float mHourWidth;
 
+        private boolean mDrawColon;
+
+        long mColonUpdateRate = COLON_UPDATE_RATE_MS;
+
         // handler to update the time once a second in interactive mode
         final Handler mUpdateTimeHandler = new Handler() {
             @Override
@@ -81,12 +84,12 @@ public class WatchFaceAppService extends CanvasWatchFaceService {
                 switch (message.what) {
                     case MSG_UPDATE_TIME:
                         invalidate();
-                        //if (shouldTimerBeRunning()) {
-                            long timeMs = System.currentTimeMillis();
-                            long delayMs = 1000;
+                        if (shouldTimerBeRunning()) {
+                            long currentTimeMS = System.currentTimeMillis();
+                            long delayMs = mColonUpdateRate - (currentTimeMS % mColonUpdateRate);
                             mUpdateTimeHandler
                                     .sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs);
-                        //}
+                        }
                         break;
                 }
             }
@@ -128,7 +131,6 @@ public class WatchFaceAppService extends CanvasWatchFaceService {
             @Override
             public void onReceive(Context context, Intent intent) {
                 mCalendar.setTimeZone(TimeZone.getDefault());
-                initFormats();
                 invalidate();
             }
         };
@@ -180,7 +182,6 @@ public class WatchFaceAppService extends CanvasWatchFaceService {
 
             mCalendar = Calendar.getInstance();
             mDate = new Date();
-            initFormats();
         }
 
         @Override
@@ -192,6 +193,8 @@ public class WatchFaceAppService extends CanvasWatchFaceService {
             canvas.drawColor(Color.GREEN);
 
             canvas.drawBitmap(mScaledBackgroundBitmap, 0, 0, null);
+
+            mDrawColon = (System.currentTimeMillis() % 1000) < 500;
 
             int hour = mCalendar.get(Calendar.HOUR);
             if(hour == 0) {
@@ -211,12 +214,15 @@ public class WatchFaceAppService extends CanvasWatchFaceService {
 
             x += mTimePaint.measureText(hourString);
 
-            canvas.drawText(":", x, bounds.centerY() + mTimeYOffset, mTimePaint);
+            if (isInAmbientMode() || mDrawColon) {
+                canvas.drawText(":", x, bounds.centerY() + mTimeYOffset, mTimePaint);
+            }
 
             x += mColonWidth;
 
             int minute = mCalendar.get(Calendar.MINUTE);
             String minuteString = String.valueOf(minute);
+            minuteString = String.format("%02d", hour);
             canvas.drawText(minuteString,
                     x,
                     bounds.centerY() + mTimeYOffset,
@@ -264,11 +270,11 @@ public class WatchFaceAppService extends CanvasWatchFaceService {
                 //mGoogleApiClient.connect();
                 registerReceivers();
                 mCalendar.setTimeZone(TimeZone.getDefault());
-                initFormats();
             } else {
                 //mGoogleApiClient.disconnect();
                 unregisterReceivers();
             }
+            updateTimer();
         }
 
         @Override
@@ -287,6 +293,19 @@ public class WatchFaceAppService extends CanvasWatchFaceService {
         public void onTimeTick() {
             super.onTimeTick();
             invalidate();
+        }
+
+        @Override
+        public void onDestroy() {
+            mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
+            super.onDestroy();
+        }
+
+        private void updateTimer() {
+            mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
+            if (shouldTimerBeRunning()) {
+                mUpdateTimeHandler.sendEmptyMessage(MSG_UPDATE_TIME);
+            }
         }
 
         private void registerReceivers() {
@@ -320,11 +339,8 @@ public class WatchFaceAppService extends CanvasWatchFaceService {
             WatchFaceAppService.this.unregisterReceiver(mReceiver);
         }
 
-        private void initFormats() {
-            mDayOfWeekFormat = new SimpleDateFormat("EEEE", Locale.getDefault());
-            mDayOfWeekFormat.setCalendar(mCalendar);
-            mDateFormat = DateFormat.getDateFormat(WatchFaceAppService.this);
-            mDateFormat.setCalendar(mCalendar);
+        private boolean shouldTimerBeRunning() {
+            return isVisible() && !isInAmbientMode();
         }
     }
 }
