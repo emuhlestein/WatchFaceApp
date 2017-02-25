@@ -185,7 +185,7 @@ public class NotificationUtils {
         return notificationText;
     }
 
-    private static void sendData(Context context, double minTemp, double maxTemp, int weatherId) {
+    private static void sendData(Context context, float minTemp, float maxTemp, int weatherId) {
         Intent localIntent = new Intent(MainActivity.LOCAL_ACTION);
         localIntent.putExtra(WEATHER_MINTEMP, minTemp);
         localIntent.putExtra(WEATHER_MAXTEMP, maxTemp);

@@ -23,12 +23,15 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.intelliviz.wearapplication.MainActivity.WEATHER_IMAGE;
-import static com.intelliviz.wearapplication.MainActivity.WEATHER_MAXTEMP;
-import static com.intelliviz.wearapplication.MainActivity.WEATHER_MINTEMP;
+import static com.intelliviz.wearapplication.WatchFaceAppService.LOCAL_ACTION2;
+import static com.intelliviz.wearapplication.WatchFaceAppService.WEATHER_IMAGE;
+import static com.intelliviz.wearapplication.WatchFaceAppService.WEATHER_MAXTEMP;
+import static com.intelliviz.wearapplication.WatchFaceAppService.WEATHER_MAXTEMP_STR;
+import static com.intelliviz.wearapplication.WatchFaceAppService.WEATHER_MINTEMP;
+import static com.intelliviz.wearapplication.WatchFaceAppService.WEATHER_MINTEMP_STR;
 
 public class DataLayerListenerService extends WearableListenerService {
-    private static final String TAG = "DataLayerSample";
+    private static final String TAG = DataLayerListenerService.class.getSimpleName();
     private static final int TIMEOUT_MS = 1000;
     private GoogleApiClient mGoogleApiClient;
 
@@ -46,6 +49,8 @@ public class DataLayerListenerService extends WearableListenerService {
         final List<DataEvent> events = FreezableUtils
                 .freezeIterable(dataEvents);
 
+        Log.i(TAG, "Made it here!!!!!!!!!!!!!!!!!");
+
         // Loop through the events and send a message
         // to the node that created the data item.
         for (DataEvent event : events) {
@@ -57,14 +62,23 @@ public class DataLayerListenerService extends WearableListenerService {
 
                 float mintemp = map.getFloat("mintemp");
                 float maxtemp = map.getFloat("maxtemp");
+                String mintTempString = map.getString("mintempstring");
+                String maxTempString = map.getString("maxtempstring");
 
-                Intent localIntent = new Intent(MainActivity.LOCAL_ACTION);
+                String str = "DataLayerListenerService: Min Temp: " + Float.toString(mintemp) + "  Max Temp: " + maxtemp;
+                Log.i(TAG, str);
+
+                Intent localIntent = new Intent(LOCAL_ACTION2);
                 localIntent.putExtra(WEATHER_MINTEMP, mintemp);
                 localIntent.putExtra(WEATHER_MAXTEMP, maxtemp);
+
+                localIntent.putExtra(WEATHER_MINTEMP_STR, mintTempString);
+                localIntent.putExtra(WEATHER_MAXTEMP_STR, maxTempString);
 
                 Asset asset = map.getAsset("imageData");
                 if(asset != null) {
 
+                    Log.i(TAG, "Adding bitmap data to intent");
                     Bitmap bitmap = loadBitmapFromAsset(asset);
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);

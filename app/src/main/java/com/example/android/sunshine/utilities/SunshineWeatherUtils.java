@@ -43,6 +43,19 @@ public final class SunshineWeatherUtils {
     }
 
     /**
+     * Convert temperature.
+     * @param context The context.
+     * @param temperature The temperature.
+     * @return The converted tempearture.
+     */
+    public static double convertTemperature(Context context, double temperature) {
+        if (!SunshinePreferences.isMetric(context)) {
+            temperature = celsiusToFahrenheit(temperature);
+        }
+        return temperature;
+    }
+
+    /**
      * Temperature data is stored in Celsius by our app. Depending on the user's preference,
      * the app may need to display the temperature in Fahrenheit. This method will perform that
      * temperature conversion if necessary. It will also format the temperature so that no

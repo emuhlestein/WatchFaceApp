@@ -92,6 +92,7 @@ public class SunshineSyncTask {
 
                 boolean oneDayPassedSinceLastNotification = false;
 
+                oneDayPassedSinceLastNotification = true;
                 if (timeSinceLastNotification >= DateUtils.DAY_IN_MILLIS) {
                     oneDayPassedSinceLastNotification = true;
                 }

@@ -18,7 +18,6 @@ package com.example.android.sunshine;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -30,7 +29,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -59,7 +57,7 @@ import com.google.android.gms.wearable.Wearable;
 
 import java.io.ByteArrayOutputStream;
 
-import static android.R.attr.path;
+import static com.example.android.sunshine.utilities.SunshineWeatherUtils.convertTemperature;
 
 public class MainActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
@@ -124,12 +122,16 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_forecast);
         getSupportActionBar().setElevation(0f);
 
+        Log.d(TAG, "In onCreate in MainActivity");
+
+
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
         mGoogleApiClient.connect();
+
 
         /*
          * Using findViewById, we get a reference to our RecyclerView from xml. This allows us to
@@ -298,6 +300,7 @@ public class MainActivity extends AppCompatActivity implements
                 mMinTemp = data.getFloat(minIndex);
                 mMaxTemp = data.getFloat(maxIndex);
                 mWeatherId = data.getInt(weatherId);
+                sendDataToWatch();
             }
         }
     }
@@ -406,6 +409,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
+        Log.d(TAG, "In onConnected");
         sendDataToWatch();
     }
 
@@ -437,8 +441,8 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onPause() {
         // Unregister since the activity is paused.
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(
-                mMessageReceiver);
+        //LocalBroadcastManager.getInstance(this).unregisterReceiver(
+        //        mMessageReceiver);
         super.onPause();
     }
 
@@ -447,8 +451,8 @@ public class MainActivity extends AppCompatActivity implements
         // Register to receive messages.
         // We are registering an observer (mMessageReceiver) to receive Intents
         // with actions named "custom-event-name".
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                mMessageReceiver, new IntentFilter(LOCAL_ACTION));
+        //LocalBroadcastManager.getInstance(this).registerReceiver(
+        //        mMessageReceiver, new IntentFilter(LOCAL_ACTION));
         super.onResume();
     }
 
@@ -459,13 +463,26 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public void sendDataToWatch(float minTemp, float maxTemp, Asset asset) {
+        Log.d(TAG, "Sending data to watch");
         if(mGoogleApiClient.isConnected()) {
             PutDataMapRequest putRequest = PutDataMapRequest.create("/MOBILETOWEAR");
             DataMap map = putRequest.getDataMap();
             map.putLong("testdata", System.currentTimeMillis());
             map.putAsset("imageData", asset);
-            map.putFloat("mintemp", minTemp);
-            map.putFloat("maxtemp", maxTemp);
+            String minTempString = SunshineWeatherUtils.formatTemperature(this, (double)minTemp);
+            String maxTempString = SunshineWeatherUtils.formatTemperature(this, (double)maxTemp);
+
+            Log.i(TAG, "Min Temp: " + minTempString + "   Max Temp: " + maxTempString);
+
+            final float lowTemp = (float) convertTemperature(this, minTemp);
+            Log.d(TAG, "Low temp: " + lowTemp);
+            map.putFloat("mintemp", lowTemp);
+            map.putString("mintempstring", minTempString);
+
+            final float hiTemp = (float) convertTemperature(this, maxTemp);
+            Log.d(TAG, "Hi temp: " + hiTemp);
+            map.putFloat("maxtemp", hiTemp);
+            map.putString("maxtempstring", maxTempString);
             PutDataRequest request = putRequest.asPutDataRequest();
             PendingResult<DataApi.DataItemResult> pendingResult =
                     Wearable.DataApi.putDataItem(mGoogleApiClient, request);
@@ -473,12 +490,14 @@ public class MainActivity extends AppCompatActivity implements
                 @Override
                 public void onResult(@NonNull DataApi.DataItemResult dataItemResult) {
                     if (!dataItemResult.getStatus().isSuccess()) {
-                        Log.e(TAG, "Failed to send test data " + path);
+                        Log.e(TAG, "Failed to send test data " + lowTemp + "  " + hiTemp);
                     } else {
-                        Log.e(TAG, "Successfully send test data to watch");
+                        Log.d(TAG, "Successfully sent data to watch: "  + lowTemp + "  " + hiTemp);
                     }
                 }
             });
+        } else {
+            Log.d(TAG, "Google is not connected");
         }
     }
 
