@@ -25,9 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.intelliviz.wearapplication.WatchFaceAppService.LOCAL_ACTION2;
 import static com.intelliviz.wearapplication.WatchFaceAppService.WEATHER_IMAGE;
-import static com.intelliviz.wearapplication.WatchFaceAppService.WEATHER_MAXTEMP;
 import static com.intelliviz.wearapplication.WatchFaceAppService.WEATHER_MAXTEMP_STR;
-import static com.intelliviz.wearapplication.WatchFaceAppService.WEATHER_MINTEMP;
 import static com.intelliviz.wearapplication.WatchFaceAppService.WEATHER_MINTEMP_STR;
 
 public class DataLayerListenerService extends WearableListenerService {
@@ -49,8 +47,6 @@ public class DataLayerListenerService extends WearableListenerService {
         final List<DataEvent> events = FreezableUtils
                 .freezeIterable(dataEvents);
 
-        Log.i(TAG, "Made it here!!!!!!!!!!!!!!!!!");
-
         // Loop through the events and send a message
         // to the node that created the data item.
         for (DataEvent event : events) {
@@ -60,18 +56,10 @@ public class DataLayerListenerService extends WearableListenerService {
 
                 final DataMap map = DataMapItem.fromDataItem(event.getDataItem()).getDataMap();
 
-                float mintemp = map.getFloat("mintemp");
-                float maxtemp = map.getFloat("maxtemp");
                 String mintTempString = map.getString("mintempstring");
                 String maxTempString = map.getString("maxtempstring");
 
-                String str = "DataLayerListenerService: Min Temp: " + Float.toString(mintemp) + "  Max Temp: " + maxtemp;
-                Log.i(TAG, str);
-
                 Intent localIntent = new Intent(LOCAL_ACTION2);
-                localIntent.putExtra(WEATHER_MINTEMP, mintemp);
-                localIntent.putExtra(WEATHER_MAXTEMP, maxtemp);
-
                 localIntent.putExtra(WEATHER_MINTEMP_STR, mintTempString);
                 localIntent.putExtra(WEATHER_MAXTEMP_STR, maxTempString);
 

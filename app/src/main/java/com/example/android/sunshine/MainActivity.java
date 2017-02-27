@@ -15,8 +15,6 @@
  */
 package com.example.android.sunshine;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -56,8 +54,6 @@ import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
 import java.io.ByteArrayOutputStream;
-
-import static com.example.android.sunshine.utilities.SunshineWeatherUtils.convertTemperature;
 
 public class MainActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
@@ -409,7 +405,6 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        Log.d(TAG, "In onConnected");
         sendDataToWatch();
     }
 
@@ -421,41 +416,6 @@ public class MainActivity extends AppCompatActivity implements
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
     }
 
-    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // read weather data from intent
-            // send data to watch.
-            // Get extra data included in the Intent
-            float minTemp = intent.getFloatExtra(WEATHER_MINTEMP, 0);
-            float maxTemp = intent.getFloatExtra(WEATHER_MAXTEMP, 0);
-            int weatherId = intent.getIntExtra(WEATHER_ID, -1);
-            int smallArtResourceId = SunshineWeatherUtils.getSmallArtResourceIdForWeatherCondition(weatherId);
-            Drawable image = ResourcesCompat.getDrawable(getResources(), smallArtResourceId, null);
-            Bitmap bitmap = ((BitmapDrawable)image).getBitmap();
-            Asset asset = createAssetFromBitmap(bitmap);
-            sendDataToWatch(minTemp, maxTemp, asset);
-        }
-    };
-
-    @Override
-    protected void onPause() {
-        // Unregister since the activity is paused.
-        //LocalBroadcastManager.getInstance(this).unregisterReceiver(
-        //        mMessageReceiver);
-        super.onPause();
-    }
-
-    @Override
-    protected void onResume() {
-        // Register to receive messages.
-        // We are registering an observer (mMessageReceiver) to receive Intents
-        // with actions named "custom-event-name".
-        //LocalBroadcastManager.getInstance(this).registerReceiver(
-        //        mMessageReceiver, new IntentFilter(LOCAL_ACTION));
-        super.onResume();
-    }
-
     private static Asset createAssetFromBitmap(Bitmap bitmap) {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteStream);
@@ -463,7 +423,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public void sendDataToWatch(float minTemp, float maxTemp, Asset asset) {
-        Log.d(TAG, "Sending data to watch");
         if(mGoogleApiClient.isConnected()) {
             PutDataMapRequest putRequest = PutDataMapRequest.create("/MOBILETOWEAR");
             DataMap map = putRequest.getDataMap();
@@ -471,17 +430,7 @@ public class MainActivity extends AppCompatActivity implements
             map.putAsset("imageData", asset);
             String minTempString = SunshineWeatherUtils.formatTemperature(this, (double)minTemp);
             String maxTempString = SunshineWeatherUtils.formatTemperature(this, (double)maxTemp);
-
-            Log.i(TAG, "Min Temp: " + minTempString + "   Max Temp: " + maxTempString);
-
-            final float lowTemp = (float) convertTemperature(this, minTemp);
-            Log.d(TAG, "Low temp: " + lowTemp);
-            map.putFloat("mintemp", lowTemp);
             map.putString("mintempstring", minTempString);
-
-            final float hiTemp = (float) convertTemperature(this, maxTemp);
-            Log.d(TAG, "Hi temp: " + hiTemp);
-            map.putFloat("maxtemp", hiTemp);
             map.putString("maxtempstring", maxTempString);
             PutDataRequest request = putRequest.asPutDataRequest();
             PendingResult<DataApi.DataItemResult> pendingResult =
@@ -490,14 +439,10 @@ public class MainActivity extends AppCompatActivity implements
                 @Override
                 public void onResult(@NonNull DataApi.DataItemResult dataItemResult) {
                     if (!dataItemResult.getStatus().isSuccess()) {
-                        Log.e(TAG, "Failed to send test data " + lowTemp + "  " + hiTemp);
                     } else {
-                        Log.d(TAG, "Successfully sent data to watch: "  + lowTemp + "  " + hiTemp);
                     }
                 }
             });
-        } else {
-            Log.d(TAG, "Google is not connected");
         }
     }
 
@@ -508,5 +453,4 @@ public class MainActivity extends AppCompatActivity implements
         Asset asset = createAssetFromBitmap(bitmap);
         sendDataToWatch(mMinTemp, mMaxTemp, asset);
     }
-
 }
