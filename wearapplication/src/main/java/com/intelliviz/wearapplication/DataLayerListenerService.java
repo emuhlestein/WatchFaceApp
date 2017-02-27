@@ -28,6 +28,10 @@ import static com.intelliviz.wearapplication.WatchFaceAppService.WEATHER_IMAGE;
 import static com.intelliviz.wearapplication.WatchFaceAppService.WEATHER_MAXTEMP_STR;
 import static com.intelliviz.wearapplication.WatchFaceAppService.WEATHER_MINTEMP_STR;
 
+/**
+ * Listen for data layer changes. Receive weather data from data layer and
+ * send to watch face app service.
+ */
 public class DataLayerListenerService extends WearableListenerService {
     private static final String TAG = DataLayerListenerService.class.getSimpleName();
     private static final int TIMEOUT_MS = 1000;

@@ -55,6 +55,8 @@ import com.google.android.gms.wearable.Wearable;
 
 import java.io.ByteArrayOutputStream;
 
+import static android.R.attr.path;
+
 public class MainActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
         ForecastAdapter.ForecastAdapterOnClickHandler,
@@ -109,16 +111,11 @@ public class MainActivity extends AppCompatActivity implements
     private ProgressBar mLoadingIndicator;
     private GoogleApiClient mGoogleApiClient;
 
-    private int mCount = 0;
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forecast);
         getSupportActionBar().setElevation(0f);
-
-        Log.d(TAG, "In onCreate in MainActivity");
 
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -439,7 +436,9 @@ public class MainActivity extends AppCompatActivity implements
                 @Override
                 public void onResult(@NonNull DataApi.DataItemResult dataItemResult) {
                     if (!dataItemResult.getStatus().isSuccess()) {
+                        Log.e(TAG, "Failed to send test data " + path);
                     } else {
+                        Log.e(TAG, "Successfully send test data to watch");
                     }
                 }
             });
